@@ -1,10 +1,6 @@
-generator client {
-  provider = "prisma-client"
-  output   = "../node_modules/.prisma/client"
-}
-
 datasource db {
   provider = "postgresql"
+  // A kapcsolati URL a prisma.config.ts-ből érkezik (az a .env-ből tölti a DATABASE_URL-t).
 }
 
 model Customer {

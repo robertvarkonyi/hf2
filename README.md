@@ -32,6 +32,7 @@ migráció), Vitest, PostgreSQL (Docker Compose).
    ```bash
    npm run migrate
    ```
+   > A `DATABASE_URL` a `prisma.config.ts`-en keresztül jut el a Prisma CLI-hez (amely betölti a `.env`-et), ezért nem kell külön exportálni.
    > Fejlesztéskor új migráció generálásához: `npm run migrate:dev`.
 5. Seed betöltése (idempotens — többször is futtatható):
    ```bash
