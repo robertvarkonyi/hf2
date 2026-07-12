@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rankByDistance } from '../src/services/customers-service.js';
+import { rankByDistance } from '../src/lib/rank.js';
 import { GEO_REFERENCE, BUDAPEST } from '../src/lib/geo-reference.js';
 import { normalizeTown } from '../src/lib/normalize.js';
 
