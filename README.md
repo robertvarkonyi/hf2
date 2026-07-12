@@ -5,7 +5,8 @@ API és nincs futásidejű LLM-hívás. Betölti a `seed/seed-customers.json`-t 
 minden ügyfél településéhez egy lokális, a repóba bundle-olt referenciából koordinátát
 rendel, majd két végponton lekérdezhetővé teszi az adatot.
 
-- **Stack:** Node.js + Fastify + Prisma + PostgreSQL, Vitest tesztek.
+- **Stack:** TypeScript (Node.js + Fastify + Prisma + PostgreSQL), tsx futtató, Vitest
+  tesztek (futásidejű + statikus type tesztek).
 - **Tervdokumentumok:** [PRD](_bmad-output/prds/prd-ugyfel-tavolsag-2026-07-12/prd.md) ·
   [Architektúra-spine](_bmad-output/architecture/architecture-ugyfel-tavolsag-2026-07-12/ARCHITECTURE-SPINE.md) ·
   [Epikák & story-k](_bmad-output/epics.md)
@@ -35,11 +36,13 @@ npm run migrate        # prisma migrate deploy
 # 5. Seed (idempotens – kétszer is futtatható duplázás nélkül)
 npm run seed
 
-# 6. Szerver indítása
+# 6. Szerver indítása (tsx-szel, build nélkül)
 npm start              # http://localhost:3000
 
 # 7. Tesztek (offline, DB nélkül futnak)
-npm test
+npm test               # futásidejű tesztek
+npm run test:types     # statikus type tesztek
+npm run typecheck      # tsc típusellenőrzés
 ```
 
 ## NPM scriptek
@@ -49,9 +52,11 @@ npm test
 | `npm run db:up` / `db:down` | Postgres konténer indítása / leállítása |
 | `npm run migrate` | `prisma migrate deploy` – verziózott migrációk alkalmazása |
 | `npm run migrate:dev` | `prisma migrate dev` – új migráció fejlesztéskor |
-| `npm run seed` | `node scripts/seed.js` – idempotens betöltés + geokódolás |
-| `npm start` / `npm run dev` | Fastify szerver (a `dev` figyeli a változásokat) |
-| `npm test` | Vitest unit tesztek |
+| `npm run seed` | `tsx scripts/seed.ts` – idempotens betöltés + geokódolás |
+| `npm start` / `npm run dev` | Fastify szerver tsx-szel (a `dev` figyeli a változásokat) |
+| `npm test` | Vitest futásidejű tesztek |
+| `npm run test:types` | Vitest statikus type tesztek (`*.test-d.ts`, `expectTypeOf`) |
+| `npm run typecheck` | `tsc` típusellenőrzés (nincs emit) |
 | `npm run generate` | Prisma Client generálás |
 
 ## Végpontok
@@ -120,14 +125,15 @@ Egészség-ellenőrzés: `{ "status": "ok" }`.
 
 ```
 src/
-  lib/        normalize.js, geo-reference.js, haversine.js  (pure, tesztelhető)
-  data/       prisma.js (singleton), customers-repo.js
-  services/   seed-service.js, customers-service.js
-  routes/     customers.js
-  app.js, server.js
+  types.ts    megosztott domain típusok (Coord, CustomerRecord, RankedCustomer, …)
+  lib/        normalize.ts, geo-reference.ts, haversine.ts, rank.ts  (pure, tesztelhető)
+  data/       prisma.ts (singleton), customers-repo.ts
+  services/   seed-service.ts, customers-service.ts
+  routes/     customers.ts
+  app.ts, server.ts
 prisma/       schema.prisma + migrations/
-scripts/      seed.js
-test/         haversine, normalize, seed-mapping, by-distance
+scripts/      seed.ts
+test/         *.test.ts (futásidejű) + types.test-d.ts (type tesztek)
 ```
 
 ## Postgres MCP (fejlesztéshez)
@@ -156,7 +162,14 @@ Claude Code a következő indításkor jóváhagyásra felkínálja.
 
 A Vitest tesztek **DB nélkül**, offline futnak (a lényegi logika pure függvényekben van):
 
-- `test/haversine.test.js` – Budapest–Bécs ≈ 214 km, 0 km eset, null-koordináta.
-- `test/normalize.test.js` – ékezet/kis-nagybetű/trim, referencia-lookup.
-- `test/seed-mapping.test.js` – ismert/ismeretlen település geokódolása.
-- `test/by-distance.test.js` – rendezés: Budapest elöl, null a végén, name holtverseny.
+- `test/haversine.test.ts` – Budapest–Bécs ≈ 214 km, 0 km eset, null-koordináta.
+- `test/normalize.test.ts` – ékezet/kis-nagybetű/trim, referencia-lookup.
+- `test/seed-mapping.test.ts` – ismert/ismeretlen település geokódolása.
+- `test/by-distance.test.ts` – rendezés (Budapest elöl, null a végén, name holtverseny),
+  nyers-táv rendezés és float-biztos kerekítés.
+
+**Type tesztek** (`npm run test:types`) – statikus, `expectTypeOf`/`assertType` alapon:
+
+- `test/types.test-d.ts` – a függvények szerződései (pl. `haversineKm` → `number | null`,
+  `rankByDistance` → `RankedCustomer[]`), a válasz-alak (nincs `lat`/`lon`/`distance`),
+  és egy **drift-őr**, ami a `CustomerRecord`-ot a Prisma `Customer` modellhez köti.
