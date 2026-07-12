@@ -1,0 +1,29 @@
+{
+  "name": "ugyfel-tavolsag-szolgaltatas",
+  "version": "1.0.0",
+  "description": "Offline REST szolgáltatás Postgres fölött: idempotens seed, lokális geokódolás, ügyfelek távolság szerint Budapesthez.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "generate": "prisma generate",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "fastify": "^5.2.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.2.1",
+    "vitest": "^3.0.0"
+  }
+}

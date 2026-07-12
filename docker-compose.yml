@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: ugyfel-tavolsag-db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: customers
+    ports:
+      # A .env DATABASE_URL a host 5433-as portját várja (a konténer 5432-jére mappelve).
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d customers"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
