@@ -7,23 +7,28 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc",
     "test": "vitest run",
+    "test:types": "vitest run --typecheck.only",
     "test:watch": "vitest",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "generate": "prisma generate",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
-    "seed": "node scripts/seed.js"
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
     "fastify": "^5.2.0"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "prisma": "^6.2.1",
+    "tsx": "^4.23.0",
+    "typescript": "^7.0.2",
     "vitest": "^3.0.0"
   }
 }

@@ -1,10 +1,10 @@
 import path from 'node:path';
-import { seedCustomers } from '../src/services/seed-service.js';
-import { prisma } from '../src/data/prisma.js';
+import { seedCustomers } from '../src/services/seed-service';
+import { prisma } from '../src/data/prisma';
 
 /**
  * Idempotens seed runner. Kétszer is futtatható duplázás nélkül (FR-1).
- * Használat: `node scripts/seed.js` (a repo gyökeréből).
+ * Használat: `npm run seed` (a repo gyökeréből).
  */
 const seedPath = path.resolve(process.cwd(), 'seed/seed-customers.json');
 

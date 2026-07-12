@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapRecordToRow } from '../src/services/seed-service.js';
+import { mapRecordToRow } from '../src/services/seed-service';
 
 describe('mapRecordToRow', () => {
   it('ismert településhez koordinátát rendel', () => {

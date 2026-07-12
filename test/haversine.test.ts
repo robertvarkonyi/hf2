@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { haversineKm } from '../src/lib/haversine.js';
-import { BUDAPEST, GEO_REFERENCE } from '../src/lib/geo-reference.js';
-import { normalizeTown } from '../src/lib/normalize.js';
+import { haversineKm } from '../src/lib/haversine';
+import { BUDAPEST, GEO_REFERENCE } from '../src/lib/geo-reference';
+import { normalizeTown } from '../src/lib/normalize';
 
-const VIENNA = GEO_REFERENCE[normalizeTown('Vienna')];
+const VIENNA = GEO_REFERENCE[normalizeTown('Vienna')]!;
 
 describe('haversineKm', () => {
   it('ismert táv: Budapest–Bécs ≈ 214 km', () => {
@@ -20,7 +20,7 @@ describe('haversineKm', () => {
 
   it('szimmetrikus (a->b == b->a)', () => {
     expect(haversineKm(BUDAPEST, VIENNA)).toBeCloseTo(
-      haversineKm(VIENNA, BUDAPEST),
+      haversineKm(VIENNA, BUDAPEST)!,
       9,
     );
   });

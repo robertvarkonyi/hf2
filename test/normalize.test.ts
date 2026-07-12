@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeTown } from '../src/lib/normalize.js';
-import { lookupTown, GEO_REFERENCE, BUDAPEST } from '../src/lib/geo-reference.js';
+import { normalizeTown } from '../src/lib/normalize';
+import { lookupTown, GEO_REFERENCE, BUDAPEST } from '../src/lib/geo-reference';
 
 describe('normalizeTown', () => {
   it('kisbetűsít és trimmel', () => {

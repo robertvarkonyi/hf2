@@ -7,10 +7,9 @@
  *   2. toLowerCase (kis/nagybetű-független)
  *   3. Unicode NFD + diakritikus jelek eltávolítása (ékezetfüggetlen)
  *
- * @param {string|null|undefined} s
- * @returns {string} a normalizált kulcs (üres string, ha nincs bemenet)
+ * @returns a normalizált kulcs (üres string, ha nincs bemenet)
  */
-export function normalizeTown(s) {
+export function normalizeTown(s: string | null | undefined): string {
   if (s == null) return '';
   return String(s)
     .trim()

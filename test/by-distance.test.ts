@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { rankByDistance, roundKm } from '../src/lib/rank.js';
-import { GEO_REFERENCE, BUDAPEST } from '../src/lib/geo-reference.js';
-import { normalizeTown } from '../src/lib/normalize.js';
+import { rankByDistance, roundKm } from '../src/lib/rank';
+import { GEO_REFERENCE, BUDAPEST } from '../src/lib/geo-reference';
+import { normalizeTown } from '../src/lib/normalize';
+import type { CustomerRecord } from '../src/types';
 
-const vienna = GEO_REFERENCE[normalizeTown('Vienna')];
-const stockholm = GEO_REFERENCE[normalizeTown('Stockholm')];
+const vienna = GEO_REFERENCE[normalizeTown('Vienna')]!;
+const stockholm = GEO_REFERENCE[normalizeTown('Stockholm')]!;
 
 // Szintetikus ügyfelek a rendezési szabály (AD-5) ellenőrzéséhez.
-const customers = [
+const customers: CustomerRecord[] = [
   { id: 1, name: 'Stockholmi Ügyfél', telepules: 'Stockholm', ...stockholm, budget: 1, note: 'a' },
   { id: 2, name: 'Bécsi Ügyfél', telepules: 'Vienna', ...vienna, budget: 2, note: 'b' },
   { id: 3, name: 'Budapesti B', telepules: 'Budapest', ...BUDAPEST, budget: 3, note: 'c' },
@@ -20,16 +21,16 @@ describe('rankByDistance (FR6, AD-5)', () => {
   const ranked = rankByDistance(customers);
 
   it('növekvő távolság szerint rendez, a budapestiek elöl 0 távolsággal', () => {
-    expect(ranked[0].distanceKm).toBe(0);
-    expect(ranked[1].distanceKm).toBe(0);
+    expect(ranked[0]!.distanceKm).toBe(0);
+    expect(ranked[1]!.distanceKm).toBe(0);
     // A két budapesti holtversenyben name szerint (Budapesti A < Budapesti B).
-    expect(ranked[0].name).toBe('Budapesti A');
-    expect(ranked[1].name).toBe('Budapesti B');
+    expect(ranked[0]!.name).toBe('Budapesti A');
+    expect(ranked[1]!.name).toBe('Budapesti B');
   });
 
   it('a távolságok növekvő sorrendben követik egymást (a null-ok kivételével)', () => {
     const known = ranked.filter((r) => r.distanceKm != null).map((r) => r.distanceKm);
-    const sorted = [...known].sort((a, b) => a - b);
+    const sorted = [...known].sort((a, b) => (a as number) - (b as number));
     expect(known).toEqual(sorted);
     // Bécs közelebb van, mint Stockholm.
     expect(ranked.map((r) => r.telepules).slice(0, 4)).toEqual([
@@ -80,7 +81,7 @@ describe('roundKm (fél-felfelé, float-biztos)', () => {
 describe('rankByDistance – determinizmus és nyers-táv rendezés', () => {
   it('a valódi (nyers) táv szerint rendez, nem a kerekített szerint', () => {
     const origin = { lat: 0, lon: 0 };
-    const customers = [
+    const customers: CustomerRecord[] = [
       { id: 1, name: 'Alma', telepules: 'A', lat: 0.0453, lon: 0, budget: null, note: null }, // ~5.04 km
       { id: 2, name: 'Zebra', telepules: 'Z', lat: 0.0446, lon: 0, budget: null, note: null }, // ~4.96 km
     ];
@@ -92,7 +93,7 @@ describe('rankByDistance – determinizmus és nyers-táv rendezés', () => {
 
   it('holtversenyt determinisztikus, kódpont-alapú név-sorrenddel dönt (nem locale)', () => {
     const origin = { lat: 0, lon: 0 };
-    const customers = [
+    const customers: CustomerRecord[] = [
       { id: 1, name: 'Ábel', telepules: 'X', lat: 1, lon: 1, budget: null, note: null },
       { id: 2, name: 'Zeta', telepules: 'X', lat: 1, lon: 1, budget: null, note: null },
     ];

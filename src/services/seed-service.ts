@@ -1,17 +1,36 @@
 import { readFile } from 'node:fs/promises';
-import { lookupTown } from '../lib/geo-reference.js';
-import { upsertCustomer, countCustomers } from '../data/customers-repo.js';
+import { lookupTown } from '../lib/geo-reference';
+import {
+  upsertCustomer,
+  countCustomers,
+  type UpsertCustomerInput,
+} from '../data/customers-repo';
+import type { SeedRecord } from '../types';
+
+/** A leképezett sor: a perzisztálható adat + az egyeztetés eredménye. */
+export interface MappedRow extends UpsertCustomerInput {
+  matched: boolean;
+}
+
+/** Egy egyszerű logger interfész (a console is megfelel). */
+export interface SeedLogger {
+  warn: (msg: string) => void;
+  info?: (msg: string) => void;
+}
+
+/** A seed-futás összegzése. */
+export interface SeedResult {
+  total: number;
+  matched: number;
+  unmatched: number;
+}
 
 /**
  * Egy nyers seed-rekordot leképez a customers sor alakjára, a település
  * geokódolásával (AD-3). PURE: nincs IO, közvetlenül tesztelhető.
- *
  * Ismeretlen település esetén lat/lon = null, és `matched: false` (nem hiba).
- *
- * @param {{name:string, budget?:number, note?:string, location?:{city?:string}}} record
- * @returns {{name:string, telepules:string, lat:number|null, lon:number|null, budget:number|null, note:string|null, matched:boolean}}
  */
-export function mapRecordToRow(record) {
+export function mapRecordToRow(record: SeedRecord): MappedRow {
   const telepules = record?.location?.city ?? '';
   const coord = lookupTown(telepules);
   return {
@@ -29,13 +48,16 @@ export function mapRecordToRow(record) {
  * Betölti a seed JSON-t, geokódolja és idempotensen felviszi (upsert) az ügyfeleket.
  * Ismeretlen település nem állítja le a folyamatot: null koordinátával megy tovább,
  * és WARN log készül (FR-4). Offline: semmilyen külső hívás (AD-3).
- *
- * @param {{seedPath:string, logger?:{warn:Function, info?:Function}}} opts
- * @returns {Promise<{total:number, matched:number, unmatched:number}>}
  */
-export async function seedCustomers({ seedPath, logger = console }) {
+export async function seedCustomers({
+  seedPath,
+  logger = console,
+}: {
+  seedPath: string;
+  logger?: SeedLogger;
+}): Promise<SeedResult> {
   const raw = await readFile(seedPath, 'utf8');
-  const records = JSON.parse(raw);
+  const records = JSON.parse(raw) as SeedRecord[];
 
   let matched = 0;
   let unmatched = 0;

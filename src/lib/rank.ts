@@ -1,5 +1,6 @@
-import { haversineKm } from './haversine.js';
-import { BUDAPEST } from './geo-reference.js';
+import { haversineKm } from './haversine';
+import { BUDAPEST } from './geo-reference';
+import type { Coord, CustomerRecord, RankedCustomer } from '../types';
 
 /**
  * Pure távolság-rangsorolás (AD-5, AD-6). Nincs IO/DB-függés → közvetlenül
@@ -11,7 +12,7 @@ import { BUDAPEST } from './geo-reference.js';
  * A toPrecision kiküszöböli a bináris float ábrázolási hibát (pl. 2.35 a
  * memóriában 2.3499999996), ami különben tévesen lefelé kerekítene.
  */
-export function roundKm(km) {
+export function roundKm(km: number | null): number | null {
   if (km == null) return null;
   return Math.round(Number((km * 10).toPrecision(15))) / 10;
 }
@@ -21,8 +22,13 @@ export function roundKm(km) {
  * Szándékosan NEM localeCompare: az a futtatókörnyezet ICU/locale-jától függ,
  * így a holtverseny-rendezés gépenként eltérhetne (NFR4 sérülne).
  */
-function compareByName(a, b) {
+function compareByName(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** Belső sor a rendezéshez: a válasz-alak + a nyers távolság. */
+interface RankingRow extends RankedCustomer {
+  distance: number | null;
 }
 
 /**
@@ -33,12 +39,11 @@ function compareByName(a, b) {
  *  2) ismeretlen (null) a lista végén,
  *  3) holtverseny esetén — a null-blokkon belül is — name növekvő.
  */
-function compareByDistance(a, b) {
-  const aNull = a.distance == null;
-  const bNull = b.distance == null;
-  if (aNull && bNull) return compareByName(a.name, b.name);
-  if (aNull) return 1;
-  if (bNull) return -1;
+function compareByDistance(a: RankingRow, b: RankingRow): number {
+  // Közvetlen null-ellenőrzés, hogy a típusszűkítés a distance mezőre is hasson.
+  if (a.distance == null && b.distance == null) return compareByName(a.name, b.name);
+  if (a.distance == null) return 1;
+  if (b.distance == null) return -1;
   if (a.distance !== b.distance) return a.distance - b.distance;
   return compareByName(a.name, b.name);
 }
@@ -47,14 +52,13 @@ function compareByDistance(a, b) {
  * PURE: ügyfélsorokból távolság-rangsorolt lista Budapesthez képest (AD-5).
  * Minden elem a teljes rekordot adja + distanceKm (1 tizedes vagy null).
  * A rendezés a nyers távon történik; a nyers érték nem szivárog a válaszba.
- *
- * @param {Array<{id:number,name:string,telepules:string,lat:number|null,lon:number|null,budget:number|null,note:string|null}>} customers
- * @param {{lat:number, lon:number}} [origin]
- * @returns {Array<object>}
  */
-export function rankByDistance(customers, origin = BUDAPEST) {
+export function rankByDistance(
+  customers: CustomerRecord[],
+  origin: Coord = BUDAPEST,
+): RankedCustomer[] {
   return customers
-    .map((c) => {
+    .map((c): RankingRow => {
       const distance = haversineKm(origin, { lat: c.lat, lon: c.lon });
       return {
         id: c.id,
@@ -67,5 +71,5 @@ export function rankByDistance(customers, origin = BUDAPEST) {
       };
     })
     .sort(compareByDistance)
-    .map(({ distance, ...out }) => out); // a nyers távot nem adjuk vissza
+    .map(({ distance: _distance, ...out }): RankedCustomer => out);
 }

@@ -1,11 +1,10 @@
-import { getCount, getByDistance } from '../services/customers-service.js';
+import type { FastifyInstance } from 'fastify';
+import { getCount, getByDistance } from '../services/customers-service';
 
 /**
  * Ügyfél-végpontok Fastify plugin (routes réteg, AD-1).
- *
- * @param {import('fastify').FastifyInstance} app
  */
-export async function customersRoutes(app) {
+export async function customersRoutes(app: FastifyInstance): Promise<void> {
   // FR-5: az ügyfelek tényleges darabszáma.
   app.get('/customers/count', async () => {
     const count = await getCount();

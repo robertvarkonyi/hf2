@@ -1,4 +1,5 @@
-import { normalizeTown } from './normalize.js';
+import { normalizeTown } from './normalize';
+import type { Coord } from '../types';
 
 /**
  * Lokális, a repóba bundle-olt telepules -> {lat, lon} referencia (AD-3).
@@ -8,7 +9,7 @@ import { normalizeTown } from './normalize.js';
  * A kulcsokat a lookup normalizálja (AD-2), így az ékezet/kis-nagybetű/whitespace
  * eltérések ugyanarra a városra esnek.
  */
-const RAW_REFERENCE = {
+const RAW_REFERENCE: Record<string, Coord> = {
   Budapest: { lat: 47.4979, lon: 19.0402 },
   Vienna: { lat: 48.2082, lon: 16.3738 },
   Munich: { lat: 48.1351, lon: 11.582 },
@@ -26,29 +27,23 @@ const RAW_REFERENCE = {
   Copenhagen: { lat: 55.6761, lon: 12.5683 },
 };
 
-/**
- * Normalizált kulcsú referencia: { normalizedName: {lat, lon} }.
- */
-export const GEO_REFERENCE = Object.freeze(
-  Object.fromEntries(
-    Object.entries(RAW_REFERENCE).map(([city, coord]) => [
-      normalizeTown(city),
-      Object.freeze(coord),
-    ]),
-  ),
-);
+const normalized: Record<string, Coord> = {};
+for (const [city, coord] of Object.entries(RAW_REFERENCE)) {
+  normalized[normalizeTown(city)] = coord;
+}
 
-/**
- * A Budapest-referenciapont (a távolságot ehhez számoljuk) (AD-5).
- */
-export const BUDAPEST = GEO_REFERENCE[normalizeTown('Budapest')];
+/** Normalizált kulcsú, fagyasztott referencia. */
+export const GEO_REFERENCE: Readonly<Record<string, Coord>> = Object.freeze(normalized);
+
+/** A Budapest-referenciapont (a távolságot ehhez számoljuk) (AD-5). */
+export const BUDAPEST: Coord = GEO_REFERENCE[normalizeTown('Budapest')] as Coord;
 
 /**
  * Feloldja a település koordinátáját a referenciából.
- * @param {string|null|undefined} city a nyers településnév (pl. seed location.city)
- * @returns {{lat:number, lon:number}|null} a koordináta, vagy null, ha nincs a referenciában
+ * @param city a nyers településnév (pl. seed location.city)
+ * @returns a koordináta, vagy null, ha nincs a referenciában
  */
-export function lookupTown(city) {
+export function lookupTown(city: string | null | undefined): Coord | null {
   if (city == null) return null;
   return GEO_REFERENCE[normalizeTown(city)] ?? null;
 }

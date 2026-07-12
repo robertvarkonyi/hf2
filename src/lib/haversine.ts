@@ -1,3 +1,5 @@
+import type { Coord, CoordInput } from '../types';
+
 /**
  * Pure, null-biztos haversine távolságszámítás (AD-6).
  * Nincs IO/DB-függés → közvetlenül unit-tesztelhető.
@@ -6,15 +8,12 @@
 const EARTH_RADIUS_KM = 6371;
 
 /** Fok -> radián. */
-function toRad(deg) {
+function toRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
-/**
- * Igaz, ha a pont használható koordináta ({lat, lon} véges számokkal).
- * @param {{lat:number, lon:number}|null|undefined} p
- */
-function hasCoords(p) {
+/** Igaz, ha a pont használható koordináta ({lat, lon} véges számokkal). */
+function hasCoords(p: CoordInput | null | undefined): p is Coord {
   return (
     p != null &&
     typeof p.lat === 'number' &&
@@ -28,11 +27,12 @@ function hasCoords(p) {
  * Két pont gömbi (haversine) távolsága kilométerben.
  * Ha bármelyik koordináta hiányzik/érvénytelen, null-t ad vissza (nem dob).
  *
- * @param {{lat:number, lon:number}|null|undefined} a
- * @param {{lat:number, lon:number}|null|undefined} b
- * @returns {number|null} távolság km-ben, vagy null
+ * @returns távolság km-ben, vagy null
  */
-export function haversineKm(a, b) {
+export function haversineKm(
+  a: CoordInput | null | undefined,
+  b: CoordInput | null | undefined,
+): number | null {
   if (!hasCoords(a) || !hasCoords(b)) return null;
 
   const dLat = toRad(b.lat - a.lat);
