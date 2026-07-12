@@ -13,7 +13,7 @@ export function geocode(city: string): { lat: number | null; lon: number | null 
 
   // Budapest-szabály: a kerületek (pl. "Budapest XI.") is a fővárosra esnek.
   if (key.startsWith('budapest')) {
-    return { ...table.budapest };
+    return { lat: table.budapest.lat, lon: table.budapest.lon };
   }
 
   const hit = table[key];

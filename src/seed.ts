@@ -19,7 +19,7 @@ async function main(): Promise<void> {
 
   for (const record of records) {
     const { lat, lon } = geocode(record.location.city);
-    if (lat === null) {
+    if (lat === null || lon === null) {
       missing += 1;
       console.warn(
         `[seed] Nincs koordináta ehhez a településhez: "${record.location.city}" (${record.name})`,

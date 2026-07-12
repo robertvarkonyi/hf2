@@ -26,4 +26,10 @@ describe('distanceFromBudapestKm', () => {
   it('0 a budapesti koordinátára', () => {
     expect(distanceFromBudapestKm(BUDAPEST)).toBe(0);
   });
+
+  it('valós távolságot ad nem budapesti pontra (Bécs ≈ 214 km)', () => {
+    const d = distanceFromBudapestKm({ lat: 48.2082, lon: 16.3738 });
+    expect(d).toBeGreaterThan(209);
+    expect(d).toBeLessThan(219);
+  });
 });
