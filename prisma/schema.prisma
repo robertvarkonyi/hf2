@@ -1,0 +1,26 @@
+// Prisma séma az Ügyfél-távolság szolgáltatáshoz.
+// A customers tábla az egyetlen entitás; a (name, telepules) pár az idempotens
+// seed természetes kulcsa (AD-4).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        Int     @id @default(autoincrement())
+  name      String
+  telepules String
+  lat       Float?
+  lon       Float?
+  budget    Int?
+  note      String?
+
+  // Természetes kulcs: idempotens upsert-hez (AD-4).
+  @@unique([name, telepules])
+  @@map("customers")
+}
