@@ -1,4 +1,4 @@
-import { getCount } from '../services/customers-service.js';
+import { getCount, getByDistance } from '../services/customers-service.js';
 
 /**
  * Ügyfél-végpontok Fastify plugin (routes réteg, AD-1).
@@ -12,5 +12,9 @@ export async function customersRoutes(app) {
     return { count };
   });
 
-  // A /customers/by-distance a Story 1.7 során kerül ide.
+  // FR-6: ügyfelek növekvő távolság szerint Budapesthez (Budapest 0.0 elöl,
+  // ismeretlen koordináta a végén distanceKm:null-lal, holtverseny name szerint).
+  app.get('/customers/by-distance', async () => {
+    return getByDistance();
+  });
 }
