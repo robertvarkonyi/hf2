@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rankByDistance } from '../src/lib/rank.js';
+import { rankByDistance, roundKm } from '../src/lib/rank.js';
 import { GEO_REFERENCE, BUDAPEST } from '../src/lib/geo-reference.js';
 import { normalizeTown } from '../src/lib/normalize.js';
 
@@ -52,7 +52,7 @@ describe('rankByDistance (FR6, AD-5)', () => {
     }
   });
 
-  it('minden elem a teljes rekordot adja vissza', () => {
+  it('minden elem a teljes rekordot adja vissza (nyers távot nem szivárogtat)', () => {
     for (const r of ranked) {
       expect(r).toHaveProperty('id');
       expect(r).toHaveProperty('name');
@@ -60,6 +60,45 @@ describe('rankByDistance (FR6, AD-5)', () => {
       expect(r).toHaveProperty('budget');
       expect(r).toHaveProperty('note');
       expect(r).toHaveProperty('distanceKm');
+      expect(r).not.toHaveProperty('distance'); // a belső nyers táv nem kerül a válaszba
     }
+  });
+});
+
+describe('roundKm (fél-felfelé, float-biztos)', () => {
+  it('a .x5 határértéket felfelé kerekíti (bináris float ellenére)', () => {
+    expect(roundKm(2.35)).toBe(2.4);
+    expect(roundKm(2.45)).toBe(2.5);
+    expect(roundKm(2.85)).toBe(2.9);
+  });
+
+  it('null-ra null', () => {
+    expect(roundKm(null)).toBeNull();
+  });
+});
+
+describe('rankByDistance – determinizmus és nyers-táv rendezés', () => {
+  it('a valódi (nyers) táv szerint rendez, nem a kerekített szerint', () => {
+    const origin = { lat: 0, lon: 0 };
+    const customers = [
+      { id: 1, name: 'Alma', telepules: 'A', lat: 0.0453, lon: 0, budget: null, note: null }, // ~5.04 km
+      { id: 2, name: 'Zebra', telepules: 'Z', lat: 0.0446, lon: 0, budget: null, note: null }, // ~4.96 km
+    ];
+    const ranked = rankByDistance(customers, origin);
+    // Mindkettő 5.0-ra kerekül, de Zebra van közelebb → Zebra elöl, a név ellenére.
+    expect(ranked.map((r) => r.distanceKm)).toEqual([5, 5]);
+    expect(ranked.map((r) => r.name)).toEqual(['Zebra', 'Alma']);
+  });
+
+  it('holtversenyt determinisztikus, kódpont-alapú név-sorrenddel dönt (nem locale)', () => {
+    const origin = { lat: 0, lon: 0 };
+    const customers = [
+      { id: 1, name: 'Ábel', telepules: 'X', lat: 1, lon: 1, budget: null, note: null },
+      { id: 2, name: 'Zeta', telepules: 'X', lat: 1, lon: 1, budget: null, note: null },
+    ];
+    const ranked = rankByDistance(customers, origin);
+    // Azonos koordináta → azonos táv. Kódpont szerint 'Zeta' (Z=U+005A) < 'Ábel' (Á=U+00C1).
+    // (A 'hu' locale fordítva adná – ezt szándékosan kerüljük a determinizmusért.)
+    expect(ranked.map((r) => r.name)).toEqual(['Zeta', 'Ábel']);
   });
 });
