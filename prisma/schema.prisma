@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Customer {
+  id        Int     @id @default(autoincrement())
+  name      String
+  telepules String
+  lat       Float?
+  lon       Float?
+  budget    Int?
+  note      String?
+
+  @@unique([name, telepules])
+  @@map("customers")
+}
